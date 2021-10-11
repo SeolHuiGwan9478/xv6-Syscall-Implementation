@@ -1,0 +1,40 @@
+201901881 컴퓨터전자시스템공학부 설희관
+
+1. syscall.h
+- syscall.h에 getnice와 setnice의 sys call number를 추가
+- getnice는 24, setnice는 25로 하였다.
+
+2. usys.S
+- lib function을 추가, 즉, wrapper function을 등록 하였다.
+- SYSCALL(getnice), SYSCALL(setnice)
+
+3. syscall.c
+- syscall.c 에 kernel sys call function을 추가하였다. 함수 구현은 이곳이 아닌sysproc.c에서 할 것이다. 여기서는 syscall.h에서 등록한 sys call number에 대응되는 커널 시스콜인 sys_getnice와 sys_setnice를 등록해줄 것이다.
+- [SYS_getnice] sys_getnice, [SYS_setnice] sys_setnice
+- 외부 파일에 구현되어 있는 sys_getnice, sys_setnice를 가져온다는 것을 선언하기 위해 extern int sys_getnice(void), extern int sys_setnice(void) 작성.
+
+4. sysproc.c
+- 프로세스와 관련된 kernel sys call이 구현되어 있는 파일인 sysproc.c에 sys_getnice와 sys_setnice를 함수를 구현해주었다.
+- sysproc.c 파일에서는 pcb 관련 정보를 이용할 수 없기 때문에 proc.c에구현된  getnice_val, setnice_val을 호출하는 방식으로 구현하였다. 
+- pcb 관련 정보들이 proc.c에 구현되어 있기 때문이다.
+
+5. proc.c
+- 최초 프로세스 생성 때 기본 설정을 위한 함수인 allocproc에 p->nice=20을 통해 기본 nice 값을 20으로 초기화 시켜주었다.
+- 위에서 말했듯 pcb 관련 정보는 sysproc.c에 없기 때문에 nice, pid와 같은 pcb 관련 정보를 사용하기 위해서는 proc.c에서 함수를 구현해주어야 한다. 
+- proc.c에 getnice에서 호출될 getnice_val 함수와 setnice에서 호출될 setnice_val을 구현해주었다.
+
+6. defs.h
+- proc.c에 getnice_val, setnice_val을 추가해주었기 때문에 새로운 함수가 추가되었다고 defs.h에 정의해주었다.
+
+7. user.h
+- user mode에서 사용할 sys call을 user.h 파일에 추가해주었다.
+
+8. gnice.c, snice.c 추가
+- 테스트 목적으로 사용할 gnice.c, snice.c를 작성함.
+- stdlib.h의 atoi는 문자열이 음수여도 올바른 정수로 잘 변환을 해주었으나 제가 사용한 ulib.c의 atoi 함수는 문자열이 음수인 경우 정상적으로 음수를 처리하는 것이 아니라 0으로 바꾸어 반환합니다. 그렇기 때문에 gnice.c와 snice.c에서 첫번째 문자에 '-'가 포함될 경우 즉 음수일 경우를 따로 처리해주었습니다.
+
+9. Makefile
+- 테스트 목적으로 만든 gnice.c와 snice.c를 Makefile에 작성해주었다. xv6는 한번에 컴파일 하기 때문에 등록을 해주어야 함.
+
+10. proc.h
+- proc 인스턴스 변수로 nice를 추가하기 위해 int nice로 변수 선언을 해주었다.
